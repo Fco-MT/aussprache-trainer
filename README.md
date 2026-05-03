@@ -1,7 +1,7 @@
 # Aussprache-Trainer - Einrichtung & Bedienung
 
 Ein lokales Tool fuer Deutschlehrer mit Privacy-First-Ansatz:
-Audiodateien bleiben auf deinem MacBook - an Google wird nur anonymisierter Text gesendet.
+Audiodateien bleiben auf deinem Mac - an Google wird nur anonymisierter Text gesendet.
 
 ---
 
@@ -39,7 +39,7 @@ source venv/bin/activate
 
 Du erkennst die aktive venv daran, dass im Terminal vorne (venv) erscheint:
 ```
-(venv) manfred@MacBook aussprache_tool %
+(venv) User@MacBook aussprache_tool %
 ```
 
 ### 3. Abhaengigkeiten installieren
