@@ -1,0 +1,19 @@
+# Privater API-Key - NIEMALS hochladen!
+key.txt
+
+# Virtuelle Umgebung
+venv/
+
+# Hochgeladene Audiodateien
+uploads/
+
+# Python-Cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS-Systemdateien
+.DS_Store
+
+# Whisper-Modell-Cache (wird automatisch heruntergeladen)
+~/.cache/huggingface/

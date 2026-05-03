@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aussprache-Trainer | Deutschlehrer-Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600&display=swap" rel="stylesheet" id="noto-font">
+<style>
+:root {
+  --ink: #1c2e3f; --ink-light: #4a6278; --ink-faint: #8aa3b8;
+  --paper: #f7f4ef; --card: #ffffff;
+  --accent: #2563a8; --accent-soft: #dde8f5;
+  --green: #2d6a4f; --green-soft: #d8f0e4;
+  --red: #b91c1c; --red-soft: #fee2e2;
+  --amber: #92400e; --amber-soft: #fef3c7;
+  --shadow: 0 2px 16px rgba(28,46,63,0.09); --r: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Source Sans 3', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; padding: 2rem 1rem 5rem; }
+body::before { content: ''; position: fixed; inset: 0; background-image: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(28,46,63,0.015) 28px, rgba(28,46,63,0.015) 29px); pointer-events: none; z-index: 0; }
+.wrap { max-width: 780px; margin: 0 auto; position: relative; z-index: 1; }
+
+header { text-align: center; margin-bottom: 2.5rem; }
+.logo { font-size: 2.8rem; margin-bottom: .3rem; }
+h1 { font-family: 'Lora', serif; font-size: 2rem; letter-spacing: -.3px; }
+.subtitle { color: var(--ink-light); margin-top: .3rem; font-size: .92rem; font-weight: 300; }
+.privacy-badge { display: inline-flex; align-items: center; gap: .4rem; margin-top: .6rem; padding: .3rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; background: var(--green-soft); color: var(--green); }
+.key-status { display: inline-flex; align-items: center; gap: .4rem; margin-top: .5rem; padding: .3rem 1rem; border-radius: 20px; font-size: .8rem; font-weight: 600; }
+.key-ok  { background: var(--green-soft); color: var(--green); }
+.key-err { background: var(--red-soft); color: var(--red); }
+
+.card { background: var(--card); border-radius: var(--r); padding: 1.6rem 1.8rem; margin-bottom: 1.3rem; box-shadow: var(--shadow); }
+.card-title { font-family: 'Lora', serif; font-size: 1rem; color: var(--ink); margin-bottom: 1rem; }
+
+label { display: block; font-size: .85rem; color: var(--ink-light); margin-bottom: .35rem; font-weight: 600; }
+input[type=text], textarea { width: 100%; padding: .7rem 1rem; border: 1.5px solid #c8d8e8; border-radius: 8px; font-family: 'Source Sans 3', sans-serif; font-size: .95rem; color: var(--ink); background: #fafcff; outline: none; transition: border-color .15s; }
+input[type=text]:focus, textarea:focus { border-color: var(--accent); }
+textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+
+.drop-zone { border: 2px dashed #b8d0ea; border-radius: var(--r); padding: 2rem 1.5rem; text-align: center; cursor: pointer; transition: all .2s; background: #fafcff; position: relative; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-soft); }
+.drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.drop-icon { font-size: 2.2rem; margin-bottom: .5rem; }
+.drop-label { font-size: .9rem; color: var(--ink-light); }
+.drop-hint { font-size: .78rem; color: var(--ink-faint); margin-top: .3rem; }
+.file-chosen { font-size: .88rem; color: var(--green); font-weight: 600; margin-top: .5rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
+
+.btn { padding: .75rem 2rem; border-radius: 30px; border: none; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; cursor: pointer; font-weight: 600; transition: all .15s; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-primary { background: var(--ink); color: #fff; box-shadow: 0 4px 14px rgba(28,46,63,.2); }
+.btn-primary:hover:not(:disabled) { background: #2a4460; }
+.btn-ghost { background: #fff; color: var(--ink-light); border: 1.5px solid #c8d8e8; }
+.btn-center { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.2rem; }
+
+.progress-wrap { display: none; text-align: center; padding: 1.5rem; }
+.spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid #e0eaf5; border-top-color: var(--accent); animation: spin .8s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress-steps { list-style: none; text-align: left; display: inline-block; }
+.progress-steps li { padding: .3rem 0 .3rem 1.8rem; position: relative; font-size: .9rem; color: var(--ink-light); }
+.progress-steps li::before { content: '○'; position: absolute; left: 0; color: #c8d8e8; }
+.progress-steps li.done::before { content: '✓'; color: var(--green); }
+.progress-steps li.active::before { content: '●'; color: var(--accent); }
+
+/* Transkription mit farbigen Wörtern */
+.transcript-box { background: var(--accent-soft); border: 1.5px solid #b8d0ea; border-radius: 8px; padding: .9rem 1.1rem; font-family: 'Lora', serif; font-size: 1.05rem; line-height: 2; color: var(--ink); }
+.word-ok   { color: var(--green); font-weight: 600; }
+.word-err  { color: var(--red); font-weight: 600; text-decoration: underline wavy var(--red); }
+.word-miss { color: #bbb; font-style: italic; }
+.word-lowconf { background: #fef3c7; border-radius: 3px; padding: 0 2px; }
+
+/* Legende */
+.legend { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .7rem; font-size: .78rem; }
+.legend-item { display: flex; align-items: center; gap: .3rem; color: var(--ink-light); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Feedback */
+#feedback-output { display: none; }
+#feedback-output .fb-section { margin-bottom: 1.3rem; padding-bottom: 1.3rem; border-bottom: 1px solid #edeae3; }
+#feedback-output .fb-section:last-child { border-bottom: none; margin-bottom: 0; }
+#feedback-output h3 { font-family: 'Lora', serif; font-size: 1.05rem; color: var(--ink); margin-bottom: .6rem; font-weight: 600; }
+#feedback-output p  { font-size: .94rem; line-height: 1.7; color: var(--ink); }
+#feedback-output ul { margin-left: 1.2rem; }
+#feedback-output li { font-size: .93rem; line-height: 1.7; margin-bottom: .3rem; color: var(--ink); }
+.err-table { width: 100%; border-collapse: collapse; font-size: .87rem; margin-top: .5rem; }
+.err-table th { padding: .45rem .7rem; background: var(--accent-soft); color: var(--accent); font-weight: 600; text-align: left; border-bottom: 2px solid #b8d0ea; }
+.err-table td { padding: .45rem .7rem; border-bottom: 1px solid #eee; vertical-align: top; }
+.err-table tr:last-child td { border-bottom: none; }
+.err-table tr:hover td { background: #fafcff; }
+.summary   h3::before { content: '🎯 '; }
+.strengths h3::before { content: '✅ '; }
+.problems  h3::before { content: '⚠️ '; }
+.tips      h3::before { content: '💡 '; }
+.exercise  h3::before { content: '🔁 '; }
+
+.banner { border-radius: 8px; padding: .85rem 1.1rem; font-size: .9rem; margin-top: 1rem; }
+.banner-err  { background: var(--red-soft); border: 1.5px solid #fca5a5; color: var(--red); }
+.banner-info { background: var(--amber-soft); border: 1.5px solid #f59e0b; color: var(--amber); }
+
+/* Score bar */
+.score-wrap { margin-bottom: 1.2rem; }
+.score-label { font-size: .85rem; color: var(--ink-light); margin-bottom: .4rem; display: flex; justify-content: space-between; }
+.score-bar-bg { background: #e0eaf5; border-radius: 10px; height: 13px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 10px; transition: width .9s ease; }
+
+@media print {
+  body { background: white; padding: 0; }
+  body::before { display: none; }
+  header, #input-section, .btn-center, .progress-wrap { display: none; }
+  .card { box-shadow: none; padding: 0; margin: 0; }
+}
+
+.lang-btns { display: flex; gap: .5rem; flex-wrap: wrap; }
+.lang-btn {
+  padding: .4rem 1.1rem; border-radius: 20px;
+  border: 1.5px solid #c8d8e8; background: white;
+  color: var(--ink); font-size: .88rem; cursor: pointer;
+  font-family: 'Source Sans 3', sans-serif; font-weight: 600;
+  transition: all .15s;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active { background: var(--ink); border-color: var(--ink); color: white; }
+
+.issues-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: .45rem; margin-top: .4rem;
+}
+.issue-check {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .4rem .7rem; border-radius: 8px;
+  border: 1.5px solid #c8d8e8; background: white;
+  font-size: .85rem; cursor: pointer; transition: all .15s;
+  user-select: none;
+}
+.issue-check:hover { border-color: var(--accent); }
+.issue-check input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.issue-check.checked { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+
+/* Chinesische Schrift für Feedback-Bereich */
+#feedback-output {
+  font-family: 'Source Sans 3', 'Noto Sans TC', 'PingFang TC', sans-serif;
+}
+#feedback-output h3, #feedback-output p, #feedback-output li, #feedback-output td, #feedback-output th {
+  font-family: 'Source Sans 3', 'Noto Sans TC', 'PingFang TC', sans-serif;
+}
+/* Druckstil */
+@media print {
+  body { background: white !important; padding: 0 !important; }
+  body::before { display: none !important; }
+  header, #input-section, #result-card, .btn-center, .progress-wrap { display: none !important; }
+  #feedback-card { box-shadow: none !important; border: none !important; }
+  #feedback-card .card-title { font-size: 1.1rem; border-bottom: 1px solid #ccc; padding-bottom: .5rem; margin-bottom: 1rem; }
+  #feedback-output, #feedback-output * {
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Source Sans 3', sans-serif !important;
+  }
+}
+
+
+/* Zieltext & Transkription im Bericht */
+.report-section { margin-bottom: 1.3rem; padding-bottom: 1.3rem; border-bottom: 1px solid #edeae3; }
+.report-section-title { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: .6rem; }
+.report-text-box {
+  background: #fafcff; border: 1.5px solid #c8d8e8; border-radius: 8px;
+  padding: .8rem 1rem; font-size: .93rem; line-height: 1.75;
+  white-space: pre-wrap; color: var(--ink);
+  font-family: 'Lora', 'Noto Sans TC', 'PingFang TC', serif;
+}
+.report-text-box.target  { background: var(--accent-soft); border-color: #b8d0ea; }
+.report-text-box.spoken  { background: var(--green-soft);  border-color: #86c9a4; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">🎙️</div>
+    <h1>Aussprache-Trainer</h1>
+    <p class="subtitle">Deutschlehrer-Tool &nbsp;·&nbsp; faster-whisper lokal + Gemini-Analyse</p>
+    <div><span class="privacy-badge">🔒 Audio bleibt lokal – nur Text geht an Google</span></div>
+    <div id="key-badge"></div>
+  </header>
+
+  <div class="card" id="input-section">
+    <div class="card-title">📋 Analyse-Eingabe</div>
+    <div class="form-row">
+      <div>
+        <label for="student-name">Name der/des Studierenden</label>
+        <input type="text" id="student-name" placeholder="z. B. Li Wei">
+      </div>
+      <div></div>
+    </div>
+    <div style="margin-bottom:1rem">
+      <label>Feedback-Sprache</label>
+      <div class="lang-btns">
+        <button type="button" class="lang-btn active" data-lang="de">🇩🇪 Deutsch</button>
+        <button type="button" class="lang-btn" data-lang="en">🇬🇧 English</button>
+        <button type="button" class="lang-btn" data-lang="zh">🇹🇼 繁體中文</button>
+      </div>
+      <input type="hidden" id="feedback-lang" value="de">
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <label for="target-text">Zieltext (was vorgelesen werden sollte)</label>
+      <textarea id="target-text" placeholder="Gib hier den deutschen Text ein, den deine Studierenden vorlesen sollen …"></textarea>
+    </div>
+    <div style="margin-bottom:1rem">
+      <label>Bekannte Ausspracheprobleme <span style="font-weight:300;color:var(--ink-faint)">(optional – für gezieltes Feedback)</span></label>
+      <div class="issues-grid">
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="ei_ie"> ⚠️ ei/ie-Verwechslung</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="umlaute"> 🟣 Umlaute ä/ö/ü</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="ch_laut"> 🟠 ch-Laut (ach/ich)</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="r_laut"> 🟤 r-Laut</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="endkonsonant"> 🔴 Endkonsonanten (-t/-d)</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="wortbetonung"> 🔵 Wortbetonung</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="zahlen"> 🔢 Zahlenaussprache</label>
+        <label class="issue-check"><input type="checkbox" name="known_issues" value="diphthonge"> 🟡 Diphthonge (au/eu/äu)</label>
+      </div>
+    </div>
+
+    <div style="margin-bottom:.5rem">
+      <label>Audiodatei der/des Studierenden</label>
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="audio-file" accept=".mp3,.wav,.m4a,.ogg,.flac,.webm,.mp4,.aac">
+        <div class="drop-icon">🔊</div>
+        <div class="drop-label">Audiodatei hierher ziehen oder klicken</div>
+        <div class="drop-hint">MP3, WAV, M4A, OGG, FLAC, WebM — max. 50 MB &nbsp;·&nbsp; Audio verlässt deinen Rechner nicht</div>
+        <div class="file-chosen" id="file-name"></div>
+      </div>
+    </div>
+    <div class="btn-center">
+      <button class="btn btn-primary" id="btn-analyze">🔍 Aussprache analysieren</button>
+    </div>
+    <div id="input-error"></div>
+  </div>
+
+  <div class="card progress-wrap" id="progress-card">
+    <div class="spinner"></div>
+    <ul class="progress-steps">
+      <li id="step-upload">Audiodatei wird vorbereitet …</li>
+      <li id="step-whisper">faster-whisper transkribiert lokal (Confidence Scores) …</li>
+      <li id="step-gemini">Gemini analysiert den anonymisierten Text …</li>
+    </ul>
+  </div>
+
+  <div class="card" id="result-card" style="display:none">
+    <div class="card-title">👂 Transkription &amp; Wort-Abgleich</div>
+    <div class="transcript-box" id="transcript-out"></div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> korrekt erkannt</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span> falsch erkannt</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#bbb"></span> nicht erkannt</span>
+      <span class="legend-item"><span style="background:#fef3c7;border-radius:3px;padding:0 4px;font-size:.85em">W</span> niedrige Erkennungssicherheit</span>
+    </div>
+  </div>
+
+  <div class="card" id="feedback-card" style="display:none">
+    <div class="card-title">📊 Aussprache-Feedback: <span id="fb-name" style="color:var(--accent)"></span></div>
+    <div class="score-wrap">
+      <div class="score-label"><span>Erkennungsrate</span><span id="score-label-right"></span></div>
+      <div class="score-bar-bg"><div class="score-bar-fill" id="score-fill" style="width:0%"></div></div>
+    </div>
+    <div class="report-section" id="report-target-section" style="display:none">
+      <div class="report-section-title">📋 Zieltext</div>
+      <div class="report-text-box target" id="report-target"></div>
+    </div>
+    <div class="report-section" id="report-transcript-section" style="display:none">
+      <div class="report-section-title">👂 Transkription &amp; Wort-Abgleich</div>
+      <div class="transcript-box" id="report-transcript"></div>
+      <div class="legend" style="margin-top:.6rem">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> korrekt erkannt</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span> falsch erkannt</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#bbb"></span> nicht erkannt</span>
+        <span class="legend-item"><span style="background:#fef3c7;border-radius:3px;padding:0 4px;font-size:.85em">W</span> niedrige Erkennungssicherheit</span>
+      </div>
+    </div>
+    <div id="feedback-output"></div>
+    <div class="btn-center" style="margin-top:1.5rem">
+      <button class="btn btn-primary" id="btn-print" onclick="printWithFonts()">🖨️ Feedback drucken / als PDF</button>
+      <button class="btn btn-ghost" onclick="resetForm()">↺ Neue Analyse</button>
+    </div>
+  </div>
+
+</div>
+<script>
+fetch('/api/check_key').then(r=>r.json()).then(d=>{
+  const el = document.getElementById('key-badge');
+  el.innerHTML = d.ok
+    ? '<span class="key-status key-ok">🔑 Google API-Key gefunden – bereit</span>'
+    : '<span class="key-status key-err">⚠️ Kein API-Key – bitte key.txt anlegen (Google AI Studio)</span>';
+});
+
+const dz=document.getElementById('drop-zone'), fi=document.getElementById('audio-file'), fn=document.getElementById('file-name');
+fi.addEventListener('change',()=>{ fn.textContent=fi.files[0]?'✓ '+fi.files[0].name:''; });
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0]){fi.files=e.dataTransfer.files;fn.textContent='✓ '+fi.files[0].name;}});
+
+document.getElementById('btn-analyze').addEventListener('click', async ()=>{
+  const target=document.getElementById('target-text').value.trim();
+  const name=document.getElementById('student-name').value.trim();
+  const errEl=document.getElementById('input-error');
+  errEl.innerHTML='';
+  if(!target){errEl.innerHTML='<div class="banner banner-err">Bitte einen Zieltext eingeben.</div>';return;}
+  if(!fi.files[0]){errEl.innerHTML='<div class="banner banner-err">Bitte eine Audiodatei auswählen.</div>';return;}
+
+  document.getElementById('input-section').style.opacity='.4';
+  document.getElementById('input-section').style.pointerEvents='none';
+  const pc=document.getElementById('progress-card');
+  pc.style.display='block';
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('feedback-card').style.display='none';
+  setStep('upload');
+
+  const fd=new FormData();
+  fd.append('audio',fi.files[0]);
+  fd.append('target_text',target);
+  fd.append('student_name',name||'Studierende/r');
+  fd.append('feedback_lang',document.getElementById('feedback-lang').value);
+  document.querySelectorAll('input[name=known_issues]:checked').forEach(cb => fd.append('known_issues', cb.value));
+
+  setTimeout(()=>setStep('whisper'),800);
+
+  try {
+    const res=await fetch('/api/analyze',{method:'POST',body:fd});
+    setStep('gemini');
+    const data=await res.json();
+
+    if(data.error){
+      pc.style.display='none';
+      document.getElementById('input-section').style.opacity='1';
+      document.getElementById('input-section').style.pointerEvents='auto';
+      errEl.innerHTML=`<div class="banner banner-err">⚠️ ${data.error}</div>`;
+      return;
+    }
+
+    setTimeout(()=>{
+      pc.style.display='none';
+      document.getElementById('input-section').style.opacity='1';
+      document.getElementById('input-section').style.pointerEvents='auto';
+
+      // Farbige Transkription mit Wort-Abgleich anzeigen
+      const al=data.alignment||[];
+      const trBox=document.getElementById('transcript-out');
+      trBox.innerHTML = al.map(w=>{
+        let cls = w.status==='ok'?'word-ok':w.status==='err'?'word-err':'word-miss';
+        let text = w.status==='miss'?('['+w.target+']'):(w.spoken||w.target);
+        let lowconf = w.low_conf?' word-lowconf':'';
+        return `<span class="${cls}${lowconf}" title="Ziel: ${w.target} | Erkannt: ${w.spoken||'–'} | Conf: ${Math.round((w.confidence||0)*100)}%">${text}</span>`;
+      }).join(' ');
+
+      document.getElementById('result-card').style.display='block';
+
+      // Score
+      const ok=al.filter(w=>w.status==='ok').length, total=al.length;
+      const score=total>0?Math.round(ok/total*100):0;
+      const barColor=score>=80?'#2d6a4f':score>=60?'#d97706':'#b91c1c';
+      document.getElementById('score-label-right').innerHTML=`<strong>${score}%</strong> &nbsp;(${ok} von ${total} Wörtern)`;
+      document.getElementById('fb-name').textContent=data.student_name;
+
+      // Zieltext im Bericht: alle Zeilenumbrüche → Leerzeichen → ein Absatz
+      if (data.target_text) {
+        const targetOneLine = data.target_text.replace(/\s*\n\s*/g, ' ').trim();
+        document.getElementById('report-target').textContent = targetOneLine;
+        document.getElementById('report-target-section').style.display = 'block';
+      }
+      // Transkription im Bericht: gleiche farbige Wort-Darstellung wie oben
+      if (data.alignment && data.alignment.length) {
+        const al = data.alignment;
+        document.getElementById('report-transcript').innerHTML = al.map(w => {
+          let cls = w.status==='ok'?'word-ok':w.status==='err'?'word-err':'word-miss';
+          let text = w.status==='miss'?('['+w.target+']'):(w.spoken||w.target);
+          let lowconf = w.low_conf?' word-lowconf':'';
+          return `<span class="${cls}${lowconf}" title="Ziel: ${w.target} | Erkannt: ${w.spoken||'–'} | Conf: ${Math.round((w.confidence||0)*100)}%">${text}</span>`;
+        }).join(' ');
+        document.getElementById('report-transcript-section').style.display = 'block';
+      }
+      document.getElementById('feedback-card').style.display='block';
+      setTimeout(()=>{
+        const fill=document.getElementById('score-fill');
+        if(fill){fill.style.background=barColor;fill.style.width=score+'%';}
+      },100);
+
+      // Feedback
+      const fbOut=document.getElementById('feedback-output');
+      fbOut.innerHTML=data.feedback_html;
+      fbOut.style.display='block';
+
+      document.getElementById('feedback-card').scrollIntoView({behavior:'smooth',block:'start'});
+    },600);
+
+  } catch(e){
+    pc.style.display='none';
+    document.getElementById('input-section').style.opacity='1';
+    document.getElementById('input-section').style.pointerEvents='auto';
+    errEl.innerHTML=`<div class="banner banner-err">Verbindungsfehler: ${e.message}</div>`;
+  }
+});
+
+function setStep(s){
+  ['upload','whisper','gemini'].forEach(id=>{
+    document.getElementById('step-'+id).classList.remove('done','active');
+  });
+  const order=['upload','whisper','gemini'];
+  order.forEach((id,i)=>{
+    const el=document.getElementById('step-'+id);
+    const idx=order.indexOf(s);
+    if(i<idx)el.classList.add('done');
+    else if(i===idx)el.classList.add('active');
+  });
+}
+
+function resetForm(){
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('feedback-card').style.display='none';
+  document.getElementById('feedback-output').innerHTML='';
+  document.getElementById('transcript-out').innerHTML='';
+  document.getElementById('file-name').textContent='';
+  fi.value='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Language selector
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('feedback-lang').value = btn.dataset.lang;
+  });
+});
+
+// Checkbox highlighting
+document.querySelectorAll('.issue-check input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.issue-check').classList.toggle('checked', cb.checked);
+  });
+});
+
+
+function printWithFonts() {
+  const btn = document.getElementById('btn-print');
+  btn.disabled = true;
+  btn.textContent = '⏳ Fonts werden geladen…';
+  // Warte bis Noto Sans TC geladen ist
+  document.fonts.load('400 1em "Noto Sans TC"').then(() => {
+    document.fonts.ready.then(() => {
+      btn.disabled = false;
+      btn.innerHTML = '🖨️ Feedback drucken / als PDF';
+      window.print();
+    });
+  }).catch(() => {
+    // Fallback: direkt drucken
+    btn.disabled = false;
+    btn.innerHTML = '🖨️ Feedback drucken / als PDF';
+    window.print();
+  });
+}
+
+</script>
+</body>
+</html>
