@@ -302,6 +302,28 @@ def call_gemini(target, transcript, alignment, low_conf_words, name, api_key, la
         error_summary += f"\nWörter mit niedriger Erkennungssicherheit (<{int(CONFIDENCE_THRESHOLD*100)}%):\n"
         error_summary += "  " + ", ".join(low_conf_unique) + "\n"
 
+    # Korrekt erkannte Wörter für den Stärken-Abschnitt
+    ok_words = [w['target'] for w in alignment if w['status'] == 'ok']
+    # Korrekt erkannte zusammenhängende Phrasen (mind. 3 Wörter)
+    ok_phrases = []
+    run = []
+    for w in alignment:
+        if w['status'] == 'ok':
+            run.append(w['target'])
+        else:
+            if len(run) >= 3:
+                ok_phrases.append(' '.join(run))
+            run = []
+    if len(run) >= 3:
+        ok_phrases.append(' '.join(run))
+    ok_summary = ""
+    if ok_phrases:
+        ok_summary = "Korrekt erkannte Phrasen (≥3 Wörter zusammenhängend):\n  " + "\n  ".join(ok_phrases[:6])
+    elif ok_words:
+        ok_summary = "Korrekt erkannte Einzelwörter:\n  " + ", ".join(ok_words[:12])
+    else:
+        ok_summary = "Kaum korrekte Erkennungen."
+
     known_issues = known_issues or []
 
     # Bekannte Probleme: Hinweise für den Prompt aufbauen
@@ -360,7 +382,7 @@ Erstelle präzises Feedback als sauberes HTML (kein DOCTYPE/html/body). Struktur
 
 <div class="fb-section strengths">
 <h3>Stärken</h3>
-<p>[Konkrete korrekt erkannte Wörter oder Sätze nennen]</p>
+<p>[NUR aus dieser Liste: {ok_summary} – keine anderen Textteile]</p>
 </div>
 
 <div class="fb-section problems">
@@ -392,7 +414,8 @@ Erstelle präzises Feedback als sauberes HTML (kein DOCTYPE/html/body). Struktur
     import re as _re
     html = _re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
     html = _re.sub(r'\*(.+?)\*', r'<em>\1</em>', html)
-    return html
+    html = _re.sub(r'Ausf.hrlich\s*Kompakt', '', html, flags=_re.IGNORECASE)
+    return html.strip()
 
 
 if __name__ == "__main__":
