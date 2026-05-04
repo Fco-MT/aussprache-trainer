@@ -105,6 +105,13 @@ textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
 .score-bar-bg { background: #e0eaf5; border-radius: 10px; height: 13px; overflow: hidden; }
 .score-bar-fill { height: 100%; border-radius: 10px; transition: width .9s ease; }
 
+/* Print frame für direktes Drucken (Safari-kompatibel) */
+#print-frame { display: none; }
+@media print {
+  body > * { display: none !important; }
+  #print-frame { display: block !important; }
+}
+/* Normaler Druckstil (Fallback) */
 @media print {
   body { background: white; padding: 0; }
   body::before { display: none; }
@@ -279,7 +286,8 @@ textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
     </div>
     <div id="feedback-output"></div>
     <div class="btn-center" style="margin-top:1.5rem">
-      <button class="btn btn-primary" id="btn-print" onclick="printWithFonts()">🖨️ Feedback drucken / als PDF</button>
+      <button class="btn btn-primary" id="btn-print" onclick="printWithFonts(false)">🖨️ A4 drucken</button>
+      <button class="btn btn-primary" id="btn-print-a5" onclick="printWithFonts(true)" style="background:var(--accent)">📱 A5 / Mobil</button>
       <button class="btn btn-ghost" onclick="resetForm()">↺ Neue Analyse</button>
     </div>
   </div>
@@ -440,23 +448,95 @@ document.querySelectorAll('.issue-check input[type=checkbox]').forEach(cb => {
 });
 
 
-function printWithFonts() {
-  const btn = document.getElementById('btn-print');
+function printWithFonts(a5) {
+  const btn = a5 ? document.getElementById('btn-print-a5') : document.getElementById('btn-print');
+  const orig = btn.innerHTML;
   btn.disabled = true;
   btn.textContent = '⏳ Fonts werden geladen…';
-  // Warte bis Noto Sans TC geladen ist
   document.fonts.load('400 1em "Noto Sans TC"').then(() => {
     document.fonts.ready.then(() => {
       btn.disabled = false;
-      btn.innerHTML = '🖨️ Feedback drucken / als PDF';
-      window.print();
+      btn.innerHTML = orig;
+      buildPrintWindow(a5);
     });
   }).catch(() => {
-    // Fallback: direkt drucken
     btn.disabled = false;
-    btn.innerHTML = '🖨️ Feedback drucken / als PDF';
-    window.print();
+    btn.innerHTML = orig;
+    buildPrintWindow(a5);
   });
+}
+
+function buildPrintWindow(a5) {
+  const name      = document.getElementById('fb-name').textContent;
+  const scoreEl   = document.querySelector('.score-wrap');
+  const scoreHtml = scoreEl ? scoreEl.outerHTML : '';
+  const targetTxt = document.getElementById('report-target') ? document.getElementById('report-target').textContent : '';
+  const trEl      = document.getElementById('report-transcript');
+  const trHtml    = trEl ? trEl.innerHTML : '';
+  const legendEl  = document.querySelector('#report-transcript-section .legend');
+  const rawLegend = legendEl ? legendEl.outerHTML : '';
+  const legendHtml = rawLegend
+    .replace(/background:var\(--green\)/g, 'background:#2d6a4f;print-color-adjust:exact;-webkit-print-color-adjust:exact')
+    .replace(/background:var\(--red\)/g,   'background:#b91c1c;print-color-adjust:exact;-webkit-print-color-adjust:exact')
+    .replace(/background:#bbb/g,           'background:#bbb;print-color-adjust:exact;-webkit-print-color-adjust:exact')
+    .replace(/background:#fef3c7/g,        'background:#fef3c7;print-color-adjust:exact;-webkit-print-color-adjust:exact');
+  let fbContent = document.getElementById('feedback-output').innerHTML;
+  fbContent = fbContent.replace(/Ausführlich\s*Kompakt/gi, '').trim();
+
+  const pageSize = a5 ? 'A5' : 'A4';
+  const fontSize = '14px';
+
+  const css = [
+    '@page{size:' + pageSize + ';margin:1.2cm}',
+    '*{box-sizing:border-box}',
+    ':root{--green:#2d6a4f;--red:#b91c1c;--accent:#2563a8;--accent-soft:#dde8f5}',
+    'body{font-family:"Source Sans 3","Noto Sans TC","PingFang TC",sans-serif;font-size:' + fontSize + ';color:#1c2e3f;line-height:1.6}',
+    'h2{font-family:"Lora",serif;font-size:1.2em;margin-bottom:.6rem;border-bottom:1px solid #ccc;padding-bottom:.3rem}',
+    '.section{margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid #eee}',
+    '.section:last-child{border-bottom:none}',
+    '.section-title{font-family:"Lora",serif;font-size:1em;font-weight:600;margin-bottom:.4rem}',
+    '.score-wrap{margin-bottom:.8rem}',
+    '.score-label{font-size:.85em;color:#4a6278;margin-bottom:.3rem;display:flex;justify-content:space-between}',
+    '.score-bar-bg{background:#e0eaf5;border-radius:8px;height:10px;overflow:hidden}',
+    '.score-bar-fill{height:100%;border-radius:8px;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.report-text-box{border-radius:5px;padding:.6rem .9rem;font-size:.95em;line-height:1.7}',
+    '.report-text-box.target{background:#dde8f5;border:1px solid #b8d0ea;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.transcript-box{background:#d8f0e4;border:1px solid #86c9a4;border-radius:5px;padding:.6rem .9rem;font-size:.92em;line-height:1.75;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.word-ok{color:#2d6a4f;font-weight:700;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.word-err{color:#b91c1c;font-weight:700;text-decoration:underline wavy #b91c1c;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.word-miss{color:#bbb;font-style:italic}',
+    '.word-lowconf{background:#fef3c7;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.legend{font-size:.78em;color:#4a6278;display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}',
+    '.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.fb-section{margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid #eee}',
+    '.fb-section:last-child{border-bottom:none}',
+    '.fb-section h3{font-family:"Lora",serif;font-size:1em;font-weight:600;margin-bottom:.4rem;color:#1c2e3f}',
+    '.fb-section p,.fb-section li{font-size:.95em;line-height:1.65;margin-bottom:.25rem}',
+    '.fb-section ul{margin-left:1.1rem}',
+    '.err-table{width:100%;border-collapse:collapse;font-size:.88em;margin-top:.3rem}',
+    '.err-table th{padding:.3rem .5rem;background:#dde8f5;color:#2563a8;font-weight:600;text-align:left;border-bottom:1.5px solid #b8d0ea;print-color-adjust:exact;-webkit-print-color-adjust:exact}',
+    '.err-table td{padding:.3rem .5rem;border-bottom:1px solid #eee;vertical-align:top}',
+    'table{page-break-inside:avoid}',
+    '#print-btn{display:none}'
+  ].join('\n');
+
+  const html =
+    '<style>' + css + '</style>' +
+    '<h2>📊 Aussprache-Feedback: ' + name + '</h2>' +
+    scoreHtml +
+    (targetTxt ? '<div class="section"><div class="section-title">📋 Zieltext</div><div class="report-text-box target">' + targetTxt + '</div></div>' : '') +
+    (trHtml    ? '<div class="section"><div class="section-title">👂 Transkription &amp; Wort-Abgleich</div><div class="transcript-box">' + trHtml + '</div>' + legendHtml + '</div>' : '') +
+    '<div>' + fbContent + '</div>';
+
+  // Inject into page and print directly (Safari-compatible)
+  let frame = document.getElementById('print-frame');
+  if (!frame) { frame = document.createElement('div'); frame.id = 'print-frame'; document.body.appendChild(frame); }
+  frame.innerHTML = html;
+
+  window.print();
+
+  // Clean up after printing
+  setTimeout(() => { frame.innerHTML = ''; }, 2000);
 }
 
 </script>
