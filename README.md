@@ -9,7 +9,7 @@ Upload a student's audio recording and receive detailed pronunciation analysis �
 
 1. **faster-whisper large-v3-turbo** (local, free): Transcribes the audio file with per-segment confidence scores
 2. **Word alignment** (local): Compares transcription against the target text, highlights uncertain words
-3. **Gemini 2.5 Flash** (Google AI Free Tier): Analyses only the anonymised text — no audio, no biometric data sent to Google
+3. **Gemini 2.5 Flash** (Google AI): Analyses only the anonymised text — no audio, no biometric data sent to Google
 
 ---
 
@@ -17,7 +17,7 @@ Upload a student's audio recording and receive detailed pronunciation analysis �
 
 - Python 3.9 or newer (tested with Python 3.13)
 - A free Google AI Studio API key: https://aistudio.google.com/apikey
-- Chrome or Edge browser
+- Chrome, Edge, or Safari browser
 
 ---
 
@@ -65,7 +65,12 @@ This downloads faster-whisper, Flask, and the Google AI library (~1–2 GB, one-
   ```
   AIzaSy...
   ```
-- The Free Tier is sufficient for classroom use (1,500 requests/day free)
+
+> **Important — API quota:** The Gemini 2.5 Flash Free Tier currently allows only
+> **20 requests/day**, which is not enough for a full class session.
+> To increase this to ~250 requests/day at effectively no cost, simply add a
+> payment method in [Google AI Studio](https://aistudio.google.com) (Billing → Enable).
+> Actual charges for classroom use are typically less than €0.10/month.
 
 ---
 
@@ -85,7 +90,7 @@ source venv/bin/activate        # macOS/Linux
 python3 app.py
 ```
 
-Then open **http://127.0.0.1:5000** in Chrome or Edge.
+Then open **http://127.0.0.1:5000** in your browser.
 
 Keep the terminal window open while using the tool. To stop: press **Ctrl+C**.
 
@@ -131,9 +136,8 @@ Keep the terminal window open while using the tool. To stop: press **Ctrl+C**.
 
 ### PDF Export
 
-Click **"Feedback drucken / als PDF"** (Print / Save as PDF).
-The button waits until all fonts (including Chinese) are fully loaded before opening the print dialog.
-In the print dialog, choose **"Save as PDF"**.
+Click **"🖨️ A4 drucken"** or **"📱 A5 / Mobil"** to open a print-ready version of the feedback.
+In the print dialog, choose **"Save as PDF"**. The A5 format uses a larger font size for comfortable reading on mobile devices.
 
 ---
 
@@ -153,10 +157,12 @@ In the print dialog, choose **"Save as PDF"**.
 | Component | Cost |
 |-----------|------|
 | faster-whisper (transcription) | Free — runs locally |
-| Gemini 2.5 Flash (analysis) | Free Tier: 1,500 requests/day at no cost |
-| Beyond Free Tier | ~€0.002 per analysis |
+| Gemini 2.5 Flash — Free Tier | 20 requests/day (not sufficient for a full class) |
+| Gemini 2.5 Flash — Tier 1 | ~250 requests/day; billing enabled but effectively free |
+| Actual cost per analysis | ~€0.002–0.003 |
 
-For a class of 30 students per day, the tool runs entirely within the free tier.
+**Recommended setup:** Add a payment method in Google AI Studio to unlock Tier 1.
+For a class of 30 students per day, typical monthly costs are well under €0.10.
 
 ---
 
