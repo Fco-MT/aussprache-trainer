@@ -342,7 +342,7 @@ def call_gemini(target, transcript, alignment, low_conf_words, name, api_key, la
     lang_instructions = {
         "de": ("Deutsch", "Schreibe das gesamte Feedback auf Deutsch. Verwende KEIN Markdown (keine **Sterne**), sondern ausschliesslich HTML-Tags fuer Formatierungen."),
         "en": ("English", "Write the entire feedback in English. Use English section headings. Do NOT use Markdown (no **asterisks**), use only HTML tags for formatting."),
-        "zh": ("繁體中文", "請用繁體中文撰寫所有回饋內容，包含標題。母音請稱為「母音」，變母音請稱為「變母音」，子音請稱為「子音」，不要使用「元音」、「變元音」或「輔音」。請勿使用Markdown格式（**粗體**等），所有格式請直接用HTML標籤。"),
+        "zh": ("繁體中文", "請用繁體中文撰寫所有回饋內容，包含標題。母音請稱為「母音」，變母音（Umlaute ä/ö/ü）請稱為「變母音」，雙母音（Diphthonge，如au/eu/ei）請稱為「雙母音」，子音請稱為「子音」，不要使用「元音」、「變元音」或「輔音」，也不要將雙母音誤稱為「變母音」。請勿使用Markdown格式（**粗體**等），所有格式請直接用HTML標籤。"),
     }
     lang_name, lang_instruction = lang_instructions.get(lang, lang_instructions["de"])
 
